@@ -5,8 +5,10 @@ import com.tass.productservice.databases.repository.CategoryExtentRepository;
 import com.tass.productservice.model.dto.CategoryInfo;
 import com.tass.productservice.model.response.SearchCategoryResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.PersistenceContext;
@@ -77,6 +79,11 @@ public class CategoryExtentRepositoryImpl implements CategoryExtentRepository {
     @Override
     public List<Category> findAll(String query) {
         return session.createNativeQuery(query, Category.class).getResultList();
+    }
+    @Override
+    public List findAllChildAndParent(String query) {
+        Query response = session.createNativeQuery(query).unwrap(SQLQuery.class).setResultTransformer(Transformers.aliasToBean(CategoryInfo.class));
+        return response.getResultList();
     }
 
 }

@@ -28,15 +28,35 @@ public class CategoryController extends BaseController{
                                          @RequestParam(required = false) Integer page , @RequestParam(name = "page_size" , required = false) Integer pageSize){
         return categoryService.search(isRoot, name, page, pageSize);
     }
+//==========================================
+    @GetMapping(path = "/getChildSelect")
+    public ResponseEntity<BaseResponse> searchChildBySelect(@RequestParam(name = "id" , required = false) Long id ){
+        return createdResponse(categoryService.findAllChildBySelectTable(id),HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/getParentSelect")
+    public ResponseEntity<BaseResponse> searchParentBySelect(@RequestParam(name = "id" , required = false) Long id ){
+        return createdResponse(categoryService.findAllParentBySelectTable(id),HttpStatus.OK);
+    }
+
 
     @GetMapping(path = "/getChild")
-    public ResponseEntity<BaseResponse>  searchChild(@RequestParam(name = "name" , required = false) String name ){
+    public ResponseEntity<BaseResponse> searchChild(@RequestParam(name = "name" , required = false) String name ){
         return createdResponse(categoryService.findAllChild(name),HttpStatus.OK);
     }
 
     @GetMapping(path = "/getParent")
-    public ResponseEntity<BaseResponse>  searchParentAndChild(@RequestParam(name = "name" , required = false) String name ){
+    public ResponseEntity<BaseResponse>  searchParent(@RequestParam(name = "name" , required = false) String name ){
         return createdResponse(categoryService.findAllParent(name),HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/AllByView")
+    public ResponseEntity<BaseResponse>  searchParentAndChildByCreateView(@RequestParam(name = "name" , required = false) String name ){
+        return createdResponse(categoryService.findAllParentAndChildByCreateView(name),HttpStatus.OK);
+    }
+    @GetMapping(path = "/AllByQuery")
+    public ResponseEntity<BaseResponse>  searchParentAndChildByQuery(@RequestParam(name = "name" , required = false) String name ){
+        return createdResponse(categoryService.findAllParentAndChildByQuery(        name),HttpStatus.OK);
     }
 
 

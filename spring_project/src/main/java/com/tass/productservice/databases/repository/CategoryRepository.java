@@ -17,6 +17,12 @@ public interface CategoryRepository extends JpaRepository<Category, Long> ,JpaSp
 
     List<Category> findByName(String name);
 
+    @Query(value = "select * from category c, category_relationship cr where c.id = cr.link_id ",nativeQuery = true)
+    List<Category> findAllChildren(Long id);
+
+    @Query(value = "select * from category c, category_relationship cr where c.id = cr.id",nativeQuery = true)
+    List<Category> findAllParent(Long id);
+
 
 
 }
