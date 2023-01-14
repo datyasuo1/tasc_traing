@@ -1,0 +1,24 @@
+plugins {
+	id 'java'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Lombok6
+	compileOnly 'org.projectlombok:lombok:1.18.22'
+	annotationProcessor 'org.projectlombok:lombok:1.18.22'
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.6.6'
+
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.9'
+// https://mvnrepository.com/artifact/jakarta.persistence/jakarta.persistence-api
+	implementation group: 'jakarta.persistence', name: 'jakarta.persistence-api', version: '2.2.3'
+
+
+
+}

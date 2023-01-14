@@ -1,0 +1,8 @@
+rootProject.name = 'microservice_smart'
+include 'api-gw'
+include 'user-service'
+include 'product-service'
+include 'common'
+include 'shopingcart-service'
+include 'order-service'
+

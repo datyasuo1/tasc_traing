@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.6.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+}
+
+sourceCompatibility = '11'
+ext {
+    set('springCloudVersion', "2021.0.0")
+}
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+
+    //eliminates logback
+    all*.exclude group: 'ch.qos.logback'
+
+    //eliminates StackOverflowError
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.2'
+
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-log4j2'
+
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:2.6.6"
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-zuul:2.2.10.RELEASE'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.6.6'
+    // https://mvnrepository.com/artifact/org.redisson/redisson-spring-data-26
+    implementation 'org.redisson:redisson-spring-data-26:3.18.1'
+    implementation 'redis.clients:jedis:3.9.0'
+
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+
+}
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}

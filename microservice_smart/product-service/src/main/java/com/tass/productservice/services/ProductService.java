@@ -1,17 +1,24 @@
-package com.example.smart_shop.service;
+package com.tass.productservice.services;
 
-import com.example.smart_shop.databases.entities.Brand;
-import com.example.smart_shop.databases.entities.Category;
-import com.example.smart_shop.databases.entities.Color;
-import com.example.smart_shop.databases.entities.Product;
-import com.example.smart_shop.databases.myenum.ProductStatus;
-import com.example.smart_shop.databases.repository.*;
-import com.example.smart_shop.model.request.ProductRequest;
-import com.example.smart_shop.model.response.ApiException;
-import com.example.smart_shop.model.response.BaseResponse;
-import com.example.smart_shop.model.response.ERROR;
+
+import com.tass.common.model.ApplicationException;
+import com.tass.common.model.BaseResponseV2;
+import com.tass.common.model.ERROR;
+import com.tass.common.model.dto.order.OrderDTO;
+import com.tass.common.model.myenums.ProductStatus;
+import com.tass.productservice.entities.Brand;
+import com.tass.productservice.entities.Category;
+import com.tass.productservice.entities.Color;
+import com.tass.productservice.entities.Product;
+import com.tass.productservice.repositories.BrandRepository;
+import com.tass.productservice.repositories.CategoryRepository;
+import com.tass.productservice.repositories.ColorRepository;
+import com.tass.productservice.repositories.ProductRepository;
+import com.tass.productservice.request.ProductRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,10 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class ProductService {
 
     @Autowired
@@ -37,11 +45,11 @@ public class ProductService {
     CategoryRepository categoryRepository;
 
     @Transactional
-    public BaseResponse createProducts(ProductRequest productRequest) throws ApiException {
+    public BaseResponseV2 createProducts(ProductRequest productRequest) throws ApplicationException {
         Product product = new Product();
         Optional<Product> optionalProductBarcode = productRepository.findByBarcode(productRequest.getBarcode());
         if (optionalProductBarcode.isPresent()) {
-            return new BaseResponse<>(300, "Barcode already exist !");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Barcode already exist !");
         }
 //        List<Color> colorList = new ArrayList<>();
         Optional<Color> optionalColor = colorRepository.findByName(productRequest.getColor().getName());
@@ -57,9 +65,16 @@ public class ProductService {
             product.setPrice(productRequest.getPrice());
             product.setSold(0);
             Optional<Category> categoryOptional = categoryRepository.findById(productRequest.getCategory().getId());
+            if (!categoryOptional.isPresent()) {
+                throw new ApplicationException(ERROR.INVALID_PARAM, "Category not found");
+            }
             product.setCategory(categoryOptional.get());
             Optional<Brand> brandOptional = brandRepository.findById(productRequest.getBrand().getId());
+            if (!brandOptional.isPresent()) {
+                throw new ApplicationException(ERROR.INVALID_PARAM, "Brand not found");
+            }
             product.setBrand(brandOptional.get());
+
             Optional<Color> optionalColoName = colorRepository.findByName(productRequest.getColor().getName());
             product.setColor(optionalColoName.get());
 
@@ -67,7 +82,7 @@ public class ProductService {
             product.setCreatedAt(LocalDateTime.now());
             product.setUpdatedAt(LocalDateTime.now());
             productRepository.save(product);
-            return new BaseResponse<>(200, "Success", product);
+            return new BaseResponseV2(product);
         }
         color.setName(productRequest.getColor().getName());
         colorRepository.save(color);
@@ -80,10 +95,19 @@ public class ProductService {
         product.setQty(productRequest.getQty());
         product.setPrice(productRequest.getPrice());
         product.setSold(0);
+
         Optional<Category> categoryOptional = categoryRepository.findById(productRequest.getCategory().getId());
+        if (!categoryOptional.isPresent()) {
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Category not found");
+        }
         product.setCategory(categoryOptional.get());
+
         Optional<Brand> brandOptional = brandRepository.findById(productRequest.getBrand().getId());
+        if (!brandOptional.isPresent()) {
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Brand not found");
+        }
         product.setBrand(brandOptional.get());
+
         Optional<Color> optionalColoName = colorRepository.findByName(productRequest.getColor().getName());
         product.setColor(optionalColoName.get());
 
@@ -91,45 +115,21 @@ public class ProductService {
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
-        return new BaseResponse<>(200, "Success", product);
+        return new BaseResponseV2(product);
 
     }
 
-    private void validateRequestCreateException(ProductRequest productRequest) throws ApiException {
-
-        if (StringUtils.isBlank(productRequest.getName())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "name is blank");
-        }
-
-        if (StringUtils.isBlank(productRequest.getDescription())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "Description is blank");
-        }
-
-        if (StringUtils.isBlank(productRequest.getImages())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "image is Blank");
-        }
-        if (StringUtils.isBlank(productRequest.getDetail())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "detail is Blank");
-        }
-        if (StringUtils.isBlank(productRequest.getCategory().getId().toString())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "category is Blank");
-        }
-        if (StringUtils.isBlank(productRequest.getBrand().getId().toString())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "brand is Blank");
-        }
-        if (StringUtils.isBlank(productRequest.getColor().toString())) {
-            throw new ApiException(ERROR.INVALID_PARAM, "color is Blank");
-        }
-
-    }
 
     @Transactional
-    public BaseResponse updateProducts(Long id, ProductRequest productRequest) throws ApiException {
+    public BaseResponseV2 updateProducts(Long id, ProductRequest productRequest) throws ApplicationException {
         Optional<Product> optionalProduct = productRepository.findById(id);
         if (!optionalProduct.isPresent()) {
-            return new BaseResponse<>(300, "Product not found");
+            throw new ApplicationException(ERROR.PRODUCT_NOT_FOUND, "Product not found");
         }
         Product productOld = optionalProduct.get();
+        Optional<Product> optionalProductBarcode = productRepository.findByBarcode(productRequest.getBarcode());
+        if (optionalProductBarcode.isPresent()) {
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Barcode already exist !");}
         //tìm color theo tên
         Optional<Color> optionalColor = colorRepository.findByName(productRequest.getColor().getName());
         Color color = new Color();
@@ -137,19 +137,20 @@ public class ProductService {
         if (optionalColor.isPresent()) {
             productOld.setName(productRequest.getName());
             productOld.setDescription(productRequest.getDescription());
+            productOld.setBarcode(productRequest.getBarcode());
             productOld.setImages(productRequest.getImages());
             productOld.setDetail(productRequest.getDetail());
             productOld.setQty(productRequest.getQty());
             productOld.setPrice(productRequest.getPrice());
             Optional<Category> categoryOptional = categoryRepository.findById(productRequest.getCategory().getId());
             if (!categoryOptional.isPresent()) {
-                throw new ApiException(ERROR.INVALID_PARAM, "Category not found");
+                throw new ApplicationException(ERROR.INVALID_PARAM, "Category not found");
             }
             productOld.setCategory(categoryOptional.get());
 
             Optional<Brand> brandOptional = brandRepository.findById(productRequest.getBrand().getId());
             if (!brandOptional.isPresent()) {
-                throw new ApiException(ERROR.INVALID_PARAM, "Brand not found");
+                throw new ApplicationException(ERROR.INVALID_PARAM, "Brand not found");
             }
             productOld.setBrand(brandOptional.get());
 
@@ -159,7 +160,7 @@ public class ProductService {
             productOld.setStatus(ProductStatus.ACTIVE);
             productOld.setUpdatedAt(LocalDateTime.now());
             productRepository.save(productOld);
-            return new BaseResponse<>(200, "Success", productOld);
+            return new BaseResponseV2<>(productOld);
         }
         //nếu ko tồn tại thì save color xong mới add vào products
         color.setName(productRequest.getColor().getName());
@@ -167,6 +168,7 @@ public class ProductService {
 
         productOld.setName(productRequest.getName());
         productOld.setDescription(productRequest.getDescription());
+        productOld.setBarcode(productRequest.getBarcode());
         productOld.setImages(productRequest.getImages());
         productOld.setDetail(productRequest.getDetail());
         productOld.setQty(productRequest.getQty());
@@ -174,13 +176,13 @@ public class ProductService {
 
         Optional<Category> categoryOptional = categoryRepository.findById(productRequest.getCategory().getId());
         if (!categoryOptional.isPresent()) {
-            throw new ApiException(ERROR.INVALID_PARAM, "Category not found");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Category not found");
         }
         productOld.setCategory(categoryOptional.get());
 
         Optional<Brand> brandOptional = brandRepository.findById(productRequest.getBrand().getId());
         if (!brandOptional.isPresent()) {
-            throw new ApiException(ERROR.INVALID_PARAM, "Brand not found");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Brand not found");
         }
         productOld.setBrand(brandOptional.get());
 
@@ -190,59 +192,78 @@ public class ProductService {
         productOld.setStatus(ProductStatus.ACTIVE);
         productOld.setUpdatedAt(LocalDateTime.now());
         productRepository.save(productOld);
-        return new BaseResponse<>(200, "Success", productOld);
+        return new BaseResponseV2<>(productOld);
 
     }
+
     @Transactional
-    public BaseResponse deleteProduct(Long id) throws ApiException {
+    public BaseResponseV2 deleteProduct(Long id) throws ApplicationException {
         Optional<Product> optionalProduct = productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE);
         if (!optionalProduct.isPresent()) {
 //            return new BaseResponse(300,"Products not found");
-            throw new ApiException(ERROR.INVALID_PARAM, "Products not found");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Products not found");
         }
         Product productDel = optionalProduct.get();
         productDel.setStatus(ProductStatus.DEACTIVE);
         productRepository.save(productDel);
-        return new BaseResponse<>(200, "Success");
+        return new BaseResponseV2();
     }
 
     @Transactional
-    public BaseResponse unDeleteProduct(Long id) throws ApiException {
+    public BaseResponseV2 unDeleteProduct(Long id) throws ApplicationException {
         Optional<Product> optionalProduct = productRepository.findByIdAndStatus(id, ProductStatus.DEACTIVE);
         if (!optionalProduct.isPresent()) {
-            throw new ApiException(ERROR.INVALID_PARAM, "Products not found");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Products not found");
         }
         Product productDel = optionalProduct.get();
         productDel.setStatus(ProductStatus.ACTIVE);
         productRepository.save(productDel);
-        return new BaseResponse<>(200, " Success");
+        return new BaseResponseV2();
     }
 
     public Page<Product> findAllAndSearch(Specification<Product> specification, int page, int limit) {
         return productRepository.findAll(specification, PageRequest.of(page, limit, Sort.by("updatedAt").descending()));
     }
 
-    public BaseResponse findProductByIdActive(Long id) throws ApiException {
+    public BaseResponseV2 findProductByIdActive(Long id) throws ApplicationException {
         Optional<Product> optionalProduct = productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE);
         if (!optionalProduct.isPresent()) {
-            throw new ApiException(ERROR.INVALID_PARAM, "Products not found");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Products not found");
         }
 
         Product product = optionalProduct.get();
 
-        return new BaseResponse<>(200, "Success",product);
+        return new BaseResponseV2(product);
 
     }
-    public BaseResponse findProductById(Long id) throws ApiException {
+
+    public BaseResponseV2 findProductById(Long id) throws ApplicationException {
         Optional<Product> optionalProduct = productRepository.findById(id);
         if (!optionalProduct.isPresent()) {
-            throw new ApiException(ERROR.INVALID_PARAM, "Products not found");
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Products not found");
         }
 
         Product product = optionalProduct.get();
 
-        return new BaseResponse<>(200, "Success",product);
+        return new BaseResponseV2(product);
 
+    }
+    public BaseResponseV2 callbackProduct(Long id,int qty)throws ApplicationException{
+        Optional<Product> optionalProduct = productRepository.findById(id);
+        if (!optionalProduct.isPresent()) {
+            throw new ApplicationException(ERROR.INVALID_PARAM, "Products not found");
+        }
+        Product product = optionalProduct.get();
+        product.setQty(product.getQty()-qty);
+        product.setSold(qty);
+        productRepository.save(product);
+
+        return new BaseResponseV2<>(product);
+    }
+    @RabbitListener(queues = {"${spring.rabbitmq.queue.product}"})
+    private void listenMessage(OrderDTO orderDTO){
+        log.info("data " + orderDTO.getProductId());
+        callbackProduct(orderDTO.getProductId(),orderDTO.getQty());
     }
 
 }
