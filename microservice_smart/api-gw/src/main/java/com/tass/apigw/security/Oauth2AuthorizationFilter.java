@@ -56,20 +56,25 @@ public class Oauth2AuthorizationFilter extends BasicAuthenticationFilter {
 
         UserLoginDTO userLoginDTOObject = userLoginDTO.get();
 
-//        String role = userLoginDTOObject.getRole();
-//
-//        String uri = request.getRequestURI();
-//
-//        AntPathMatcher adt = new AntPathMatcher();
+        String role = userLoginDTOObject.getRole();
 
-//        if (adt.match(uri, "/product/findAll") || adt.match(uri, "/product/findById") || adt.match(uri, "/product/create") || adt.match(uri, "/product/update") || adt.match(uri, "/product/delete")){
-//            if (!role.equals("ADMIN")) {
-//                response.setContentType("application/json");
-//                response.setCharacterEncoding("UTF-8");
-//                response.setStatus(HttpStatus.FORBIDDEN.value());
-//                return;
-//            }
-//        }
+        String uri = request.getRequestURI();
+
+        AntPathMatcher adt = new AntPathMatcher();
+
+        if (adt.match("/product/admins/**",uri )|| adt.match( "/user/admins/**",uri)
+                || adt.match( "/role/admins/**",uri)
+                || adt.match( "/role/admins/**",uri)
+                || adt.match( "/brand/admins/**",uri)
+                || adt.match( "/category/admins/**",uri)
+                || adt.match( "/admin/order/**",uri)){
+            if (!role.equals("ADMIN")) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.setStatus(HttpStatus.FORBIDDEN.value());
+                return;
+            }
+        }
 //        if (adt.match(uri, "/category/findAll") || adt.match(uri, "/category/findById") || adt.match(uri, "/category/create") || adt.match(uri, "/category/update") || adt.match(uri, "/category/delete")){
 //            if (!role.equals("ADMIN")) {
 //                response.setContentType("application/json");
@@ -78,14 +83,16 @@ public class Oauth2AuthorizationFilter extends BasicAuthenticationFilter {
 //                return;
 //            }
 //        }
-//        if (adt.match(uri, "/createOrder")) {
-//            if (role.isBlank() || role.isEmpty()) {
-//                response.setContentType("application/json");
-//                response.setCharacterEncoding("UTF-8");
-//                response.setStatus(HttpStatus.FORBIDDEN.value());
-//                return;
-//            }
-//        }
+        if (adt.match( "/shopingcart/**",uri)
+                || adt.match( "/order/**",uri)
+                || adt.match( "http://localhost:8083/api/v1/shopingcart/** ",uri)) {
+            if (role.isBlank() || role.isEmpty() ) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.setStatus(HttpStatus.FORBIDDEN.value());
+                return;
+            }
+        }
 
 
         UserDetailExtend userDetailExtend = new UserDetailExtend(userLoginDTOObject);

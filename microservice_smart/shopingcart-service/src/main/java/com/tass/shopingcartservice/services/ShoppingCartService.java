@@ -3,9 +3,6 @@ package com.tass.shopingcartservice.services;
 import com.tass.common.model.ApplicationException;
 import com.tass.common.model.BaseResponseV2;
 import com.tass.common.model.ERROR;
-import com.tass.common.model.dto.ShopingCart.CartItemDTO;
-import com.tass.common.model.dto.ShopingCart.CartItemIdDTO;
-import com.tass.common.model.dto.ShopingCart.ShoppingCartDTO;
 import com.tass.common.model.dto.order.OrderDTO;
 import com.tass.common.model.dto.product.ProductDTO;
 import com.tass.common.model.myenums.ProductStatus;
@@ -18,15 +15,12 @@ import com.tass.shopingcartservice.entities.CartItemId;
 import com.tass.shopingcartservice.entities.ShoppingCart;
 import com.tass.shopingcartservice.repositories.CartItemRepository;
 import com.tass.shopingcartservice.repositories.ShoppingCartRepository;
-import com.tass.shopingcartservice.request.ShoppingCartRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;
 
@@ -138,7 +132,7 @@ public class ShoppingCartService extends BaseService{
 //            String message = JsonHelper.toString(shoppingCartDTO);
 //            resdisPusherMessageService.sendMessage(message , channelTopic);
 //            log.info("message",message);
-            return new BaseResponseV2<>();
+            return new BaseResponseV2<>(shoppingCart);
         }
     }
 
@@ -229,35 +223,5 @@ public class ShoppingCartService extends BaseService{
         deleteCartItem(orderDTO.getShoppingCartId(), orderDTO.getProductId());
     }
 
-//        BaseResponseV2<ProductDTO> productInfoResponse = productConnector.getProductById(orderDTO.getProductId());
-//
-//        if (!productInfoResponse.isSuccess()){
-//            throw new ApplicationException(ERROR.INVALID_PARAM);
-//        }
-//        ProductDTO productDTO = productInfoResponse.getData();
-//
-//        Optional<ShoppingCart> optionalShoppingCart = shoppingCartRepository.findById(orderDTO.getShoppingCartId());
-//        if (!optionalShoppingCart.isPresent()){
-//            throw new ApplicationException(ERROR.INVALID_PARAM);
-//        }
-//        ShoppingCart shoppingCart = optionalShoppingCart.get();
-//        Set<CartItem> cartItems = shoppingCart.getItems();
-//        boolean exits = false;
-//        for (CartItem item:cartItems
-//        ) {
-//            if (item.getProduct()==(productDTO.getId())){
-//                exits = true;
-//                cartItems.remove(item);
-//                CartItemId cartItemId = new CartItemId(orderDTO.getShoppingCartId(), orderDTO.getProductId());
-//                cartItemRepository.deleteById(cartItemId);
-//            }
-//        }
-//        if (!exits){
-//            throw new ApplicationException(ERROR.INVALID_PARAM);
-//        }
-//        shoppingCart.setItems(cartItems);
-//        shoppingCartRepository.save(shoppingCart);
-//        return new BaseResponseV2<>();
-//    }
 
 }

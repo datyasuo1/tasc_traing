@@ -31,7 +31,7 @@ public class LogAspect {
 
 
 
-    @Pointcut("execution(* com.tass.shopingcartservice.controllers..*(..)))")
+    @Pointcut("execution(* com.tass.orderservice.controllers..*(..)))")
     protected void applicationControllerAllMethod() {
     }
 

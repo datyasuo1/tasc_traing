@@ -1,7 +1,9 @@
 package com.tass.orderservice.services;
 
 
+import com.tass.common.model.ApplicationException;
 import com.tass.common.model.BaseResponseV2;
+import com.tass.common.model.ERROR;
 import com.tass.common.model.dto.ShopingCart.CartItemDTO;
 import com.tass.common.model.dto.ShopingCart.CartItemIdDTO;
 import com.tass.common.model.dto.ShopingCart.ShoppingCartDTO;
@@ -98,7 +100,7 @@ public class OrderService extends BaseService{
 //    }
 
     @Transactional
-    public BaseResponseV2<Order> placeOrder(Long id) {
+    public BaseResponseV2<Order> placeOrder(Long id) throws ApplicationException {
         Optional<ShoppingCartDTO> shoppingCartOptional = shoppingCartConnector.getShoppingCartById(id);
         if (shoppingCartOptional.isPresent()) {
             ShoppingCartDTO shoppingCart = shoppingCartOptional.get();
@@ -123,12 +125,10 @@ public class OrderService extends BaseService{
                 dto.setUnitPrice(optionalProductDTO.getData().getPrice());
                 dto.setQuantity(cartItem.getQuantity());
                 dto.setUpdatedAt(LocalDateTime.now());
+                dto.setCreatedAt(LocalDateTime.now());
                 orderDetailSet.add(dto);
 
             }
-//            for (int i = 0; i <orderDetailSet.size(); i++) {
-//
-//            }
             UserDTO userDTO = getUserDTO();
             for (CartItemDTO cartItem:
                     shoppingCart.getItems()) {
@@ -141,6 +141,7 @@ public class OrderService extends BaseService{
                     .totalPrice(optionalProductDTO.getData().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
                     .build();
             order.setUpdatedAt(LocalDateTime.now());
+            order.setCreatedAt(LocalDateTime.now());
             orderRepository.save(order);
             orderDetailRepository.saveAll(orderDetailSet);
 
@@ -152,10 +153,11 @@ public class OrderService extends BaseService{
             return new BaseResponseV2<>(order);
             }
         }
-        return null;
+        throw new ApplicationException(ERROR.ID_NOT_FOUND,"ShoppingCart Not Fond");
+//        return null;
     }
     public Page<Order> searchAllForAdmin(Specification<Order> specification, int page, int limit){
-        return orderRepository.findAll(specification, PageRequest.of(page, limit));
+        return orderRepository.findAll(specification, PageRequest.of(page, limit,Sort.by("updatedAt").descending()));
     }
 
     public int totalOrder(){

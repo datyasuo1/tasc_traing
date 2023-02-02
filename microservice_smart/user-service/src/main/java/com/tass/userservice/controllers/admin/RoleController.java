@@ -1,6 +1,7 @@
 package com.tass.userservice.controllers.admin;
 
 
+import com.tass.common.customanotation.RequireUserLogin;
 import com.tass.common.model.ApplicationException;
 import com.tass.common.model.BaseResponseV2;
 import com.tass.userservice.services.RoleService;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class RoleController {
     @Autowired
     RoleService roleService;
-
+    @RequireUserLogin
     @GetMapping
     public BaseResponseV2 findAll()throws ApplicationException {
         return roleService.findAll();

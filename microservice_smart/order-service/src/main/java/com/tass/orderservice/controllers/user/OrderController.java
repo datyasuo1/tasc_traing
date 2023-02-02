@@ -57,6 +57,8 @@ public class OrderController extends BaseService {
                                    @RequestParam(name = "page", defaultValue = "0") int page,
                                    @RequestParam(name = "limit", defaultValue = "10") int limit
     ) {
+//        UserDTO userDTO = getUserDTO();
+//        userDTO.getUserId();
         Specification<Order> specification = Specifications.OrderSpec(status,userId,page,limit);
         return orderService.searchAllForAdmin(specification,page,limit);
     }

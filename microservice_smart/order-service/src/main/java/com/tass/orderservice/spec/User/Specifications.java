@@ -2,6 +2,7 @@ package com.tass.orderservice.spec.User;
 
 
 import com.tass.common.model.myenums.OrderStatus;
+import com.tass.common.model.userauthen.UserDTO;
 import com.tass.orderservice.entities.Order;
 import org.springframework.data.jpa.domain.Specification;
 

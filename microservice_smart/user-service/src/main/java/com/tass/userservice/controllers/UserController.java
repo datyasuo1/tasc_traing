@@ -20,6 +20,7 @@ public class UserController {
     @PostMapping("/register")
     public BaseResponseV2 register(@RequestBody UserRequest request) throws ApplicationException {
         return userService.register(request);
+//        return new BaseResponseV2<>("Hello world");
     }
     @PostMapping("/login")
     public BaseResponseV2<UserLoginDTO> login(@RequestBody LoginRequest loginRequest) throws

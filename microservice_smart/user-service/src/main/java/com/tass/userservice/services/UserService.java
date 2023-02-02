@@ -86,7 +86,7 @@ public class UserService {
         userLoginDTO.setToken(token);
         userLoginDTO.setUserId(user.getId());
         userLoginDTO.setTimeToLive(100000);
-
+        userLoginDTO.setRole(user.getRole().getName());
         userLoginRepository.save(userLoginDTO);
 
         BaseResponseV2<UserLoginDTO> loginResponse = new BaseResponseV2<>();

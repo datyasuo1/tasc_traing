@@ -255,7 +255,7 @@ public class ProductService {
         }
         Product product = optionalProduct.get();
         product.setQty(product.getQty()-qty);
-        product.setSold(qty);
+        product.setSold(product.getSold()+qty);
         productRepository.save(product);
 
         return new BaseResponseV2<>(product);
